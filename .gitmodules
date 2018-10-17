@@ -1,0 +1,6 @@
+[submodule "crawl_utils"]
+	path = crawl_utils
+	url = git@github.com:englehardt/crawl_utils.git
+[submodule "shavar-list-creation"]
+	path = shavar-list-creation
+	url = git@github.com:mozilla-services/shavar-list-creation.git
