@@ -8,6 +8,15 @@ import domain_utils as du  # noqa
 sys.path.append('./shavar-list-creation')
 from disconnect_mapping import disconnect_mapping  # noqa
 
+DNT_TAG = 'dnt'
+FINGERPRINTING_TAG = 'fingerprinting'
+CRYPTOMINING_TAG = 'cryptominer'
+SESSION_REPLAY_TAG = 'session-replay'
+PERFORMANCE_TAG = 'performance'
+DISCONNECT_TAGS = {
+    FINGERPRINTING_TAG, CRYPTOMINING_TAG, SESSION_REPLAY_TAG, PERFORMANCE_TAG
+}
+
 
 class DisconnectParser(object):
     """A parser for the Disconnect list.
@@ -42,12 +51,11 @@ class DisconnectParser(object):
         self._exclude = set([x.lower() for x in categories_to_exclude])
         self._should_remap = remap_disconnect
         self._raw_blocklist = self._load_list(blocklist)
-        self._categorized_blocklist = self._parse_blocklist(
-            self._raw_blocklist)
+        rv = self._parse_blocklist(self._raw_blocklist)
+        self._categorized_blocklist, self._tagged_domains = rv
         self._blocklist = self._flatten_blocklist(self._categorized_blocklist)
         self._raw_entitylist = self._load_list(entitylist)
         self._entitylist = self._parse_entitylist(self._raw_entitylist)
-        self._disconnect_categories = dict()  # TODO
 
     def _load_list(self, location):
         """Load the list from disk and return a json object"""
@@ -73,9 +81,23 @@ class DisconnectParser(object):
         }
         for domain, category in disconnect_mapping.items():
             if len(domain) == 1:
-                print("************" + domain)
+                raise ValueError(
+                    "Unexpected domain of length 1 in category %s "
+                    "This likely means the list parser needs to be updated." %
+                    (category))
             remapped[category].add(domain)
         return remapped
+
+    def _is_domain_key(self, key):
+        """Return `True` if the key appears to be a domain key
+
+        Unfortunately the list does not currently provide a structured way to
+        differentiate between sub-category tags (like `fingerprinting`) from
+        the lists of resources that belong to an organization. We use the
+        heuristic of whether the key starts with http or ends in a slash to
+        mark resource lists.
+        """
+        return key.startswith('http') or key.endswith('/')
 
     def _parse_blocklist(self, blocklist):
         """Parse raw blocklist into a format that's easier to work with"""
@@ -83,6 +105,7 @@ class DisconnectParser(object):
             print("Parsing raw list into categorized list...")
         count = 0
         collapsed = dict()
+        tagged_domains = dict()
         if self._should_remap:
             remapping = self._remap_disconnect(blocklist)
         for cat in blocklist['categories'].keys():
@@ -98,17 +121,44 @@ class DisconnectParser(object):
                 count += len(remapping[cat])
             for item in blocklist['categories'][cat]:
                 for org, urls in item.items():
+                    # Parse out sub-category. The way the list is structured,
+                    # we must first iterate through all items to gather
+                    # the categories and then iterate again to apply these
+                    # categories to domains. Categories are assumed to apply to
+                    # all resources in an organization.
+                    tags = set()
+                    for k, v in urls.items():
+                        if self._is_domain_key(k):
+                            continue
+                        if k in DISCONNECT_TAGS:
+                            if v == "true":
+                                tags.add(k)
+                            continue
+                        elif k == DNT_TAG:
+                            continue  # ignore DNT for now
+                        raise ValueError(
+                            "Unsupported record type %s in organization %s. "
+                            "This likely means the list changed and the "
+                            "parser should be updated." % (k, org))
                     for url, domains in urls.items():
-                        # Skip categories
-                        if (not url.startswith('http') and
-                                not url.endswith('/')):
+                        if not self._is_domain_key(url):
                             continue
                         for domain in domains:
                             if len(domain) == 1:
-                                print("************" + domains)
+                                raise ValueError(
+                                    "Unexpected domain of length 1 in "
+                                    "resource list %s under organization %s. "
+                                    "This likely means the parser needs to be "
+                                    "updated due to a list format change." %
+                                    (domains, org))
                             collapsed[cat].add(domain)
+                            for tag in tags:
+                                if tag not in tagged_domains:
+                                    tagged_domains[tag] = set()
+                                tagged_domains[tag].add(domain)
                             count += 1
-        return collapsed
+
+        return collapsed, tagged_domains
 
     def _flatten_blocklist(self, blocklist):
         """Generate a flattened version of the blocklist category map"""
@@ -259,3 +309,19 @@ class DisconnectParser(object):
     def get_matching_domains(self, hostname):
         """Returns all domains that match or are subdomains of hostname"""
         return [x for x in self._blocklist if x.endswith(hostname)]
+
+    def get_fingerprinting_hostnames(self):
+        """Returns a set of hostnames that have the fingerprinting tag"""
+        return self._tagged_domains.get(FINGERPRINTING_TAG, set())
+
+    def get_cryptomining_hostnames(self):
+        """Returns a set of hostnames that have the cryptominer tag"""
+        return self._tagged_domains.get(CRYPTOMINING_TAG, set())
+
+    def get_session_replay_hostnames(self):
+        """Returns a set of hostnames that have the session replay tag"""
+        return self._tagged_domains.get(SESSION_REPLAY_TAG, set())
+
+    def get_performance_hostnames(self):
+        """Returns a set of hostnames that have the performance tag"""
+        return self._tagged_domains.get(PERFORMANCE_TAG, set())
