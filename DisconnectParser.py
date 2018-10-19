@@ -1,11 +1,13 @@
 import json
 import sys
+import os
 
 from six.moves.urllib.parse import urlparse
 
-sys.path.append('./crawl_utils')
+sys.path.append(os.path.join(os.path.dirname(__file__), 'crawl_utils'))
 import domain_utils as du  # noqa
-sys.path.append('./shavar-list-creation')
+sys.path.append(
+    os.path.join(os.path.dirname(__file__), 'shavar-list-creation'))
 from disconnect_mapping import disconnect_mapping  # noqa
 
 DNT_TAG = 'dnt'
