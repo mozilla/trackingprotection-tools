@@ -217,11 +217,11 @@ def write_entitylist_rules_to_json(rules, file):
 def writeLists(listName, listContents):
     with open(listName + "-blacklist.json", 'w') as f:
         write_domain_rules_to_json(listContents, listName, f)
-    with open(listName + "-entitylist.json", 'w') as f:
-        write_entitylist_rules_to_json(listContents, f)
+    # with open(listName + "-entitylist.json", 'w') as f:
+    #     write_entitylist_rules_to_json(listContents, f)
 
 
-for (listName, listContents) in (('EasyList', easyList), ('EasyPrivacy', easyPrivacy),
+for (listName, listContents) in (('easyList', easyList), ('easyPrivacy', easyPrivacy),
                                  ('fanBoyAnnoyance', fanBoyAnnoyance), ('fanBoySocial', fanBoySocial),
                                  ('adGuard', adGuard)):
     writeLists(listName, listContents)
