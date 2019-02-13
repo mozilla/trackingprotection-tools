@@ -1,11 +1,10 @@
 import json
-import sys
 import os
+import sys
 
+from openwpm_utils import domain as du
 from six.moves.urllib.parse import urlparse
 
-sys.path.append(os.path.join(os.path.dirname(__file__), 'crawl_utils'))
-import domain_utils as du  # noqa
 sys.path.append(
     os.path.join(os.path.dirname(__file__), 'shavar-list-creation'))
 from disconnect_mapping import disconnect_mapping  # noqa
