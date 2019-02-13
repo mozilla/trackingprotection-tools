@@ -15,7 +15,8 @@ setup(
     name='trackingprotection-tools',
     license='MPL 2.0',
     url='https://github.com/mozilla/trackingprotection-tools',
-    version='0.1.2',
+    version='0.1.3',
+    packages=['trackingprotection_tools'],
 
     # Dependencies
     install_requires=requirements,
