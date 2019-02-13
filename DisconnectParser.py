@@ -1,13 +1,8 @@
 import json
 import os
-import sys
 
 from openwpm_utils import domain as du
 from six.moves.urllib.parse import urlparse
-
-sys.path.append(
-    os.path.join(os.path.dirname(__file__), 'shavar-list-creation'))
-from disconnect_mapping import disconnect_mapping  # noqa
 
 DNT_TAG = 'dnt'
 FINGERPRINTING_TAG = 'fingerprinting'
@@ -26,7 +21,7 @@ class DisconnectParser(object):
     classifier. This does not necessarily match the implementation of
     Disconnect's own extension or any other consumer of the Disconnect list"""
     def __init__(self, blocklist, entitylist, categories_to_exclude=[],
-                 remap_disconnect=False, verbose=False):
+                 disconnect_mapping=None, verbose=False):
         """Initialize the parser.
 
         Parameters
@@ -41,16 +36,19 @@ class DisconnectParser(object):
         categories_to_exclude : list
             A list of list categories to exclude. Firefox currently excludes
             the `Content` category by default. (default empty list)
-        remap_disconnect : boolean
-            Set to True to remap the Disconnect category. The canonical source
-            of remapping info is currently located on:
+        disconnect_mapping : string
+            A file location of the disconnect category remapping file in json
+            format. The canonical source of remapping info is:
             https://github.com/mozilla-services/shavar-list-creation/blob/master/disconnect_mapping.py
         verbose : boolean
             Set to True to print list parsing info.
         """
         self.verbose = verbose
         self._exclude = set([x.lower() for x in categories_to_exclude])
-        self._should_remap = remap_disconnect
+        self._should_remap = disconnect_mapping is not None
+        if self._should_remap:
+            with open(os.path.expanduser(disconnect_mapping), 'r') as f:
+                self.disconnect_mapping = json.load(f)
         self._raw_blocklist = self._load_list(blocklist)
         rv = self._parse_blocklist(self._raw_blocklist)
         self._categorized_blocklist, self._tagged_domains = rv
@@ -80,7 +78,7 @@ class DisconnectParser(object):
             'Analytics': set(),
             'Advertising': set()
         }
-        for domain, category in disconnect_mapping.items():
+        for domain, category in self.disconnect_mapping.items():
             if len(domain) == 1:
                 raise ValueError(
                     "Unexpected domain of length 1 in category %s "
