@@ -1,2 +1,3 @@
 openwpm_utils
+requests
 six
