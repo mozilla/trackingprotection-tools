@@ -177,7 +177,7 @@ class DisconnectReport(object):
         drop_duplicates : boolean (default True)
             Set to True to drop duplicate comments
         """
-        if type(domain) == str or type(domain) == unicode:
+        if not isinstance(domain, six.string_types):
             domain = [domain]
         for item in domain:
             report = self._get_report(item)
