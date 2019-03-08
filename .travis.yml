@@ -14,5 +14,4 @@ install:
 before_script:
   - flake8
 script:
-  - cd trackinprotection_tools/test
   - py.test -s -v
