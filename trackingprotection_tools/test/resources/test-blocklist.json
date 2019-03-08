@@ -1,0 +1,142 @@
+{
+  "license": "No license.",
+  "categories": {
+    "Advertising": [
+      {
+        "Advertising Tracker A": {
+          "http://ad-trackerA.example/": [
+            "ad-trackerA-1.example",
+            "ad-trackerA-2.example",
+            "ad-trackerA-3.example"
+          ],
+          "dnt": "eff",
+          "session-replay": "true",
+          "performance": "true"
+        }
+      },
+      {
+        "Advertising Tracker B": {
+          "http://ad-trackerB.example/": [
+            "ad-trackerB.example"
+          ],
+          "dnt": "w3c",
+          "performance": "true"
+        }
+      },
+      {
+        "Advertising Tracker C": {
+          "http://ad-trackerC.example/": [
+            "ad-trackerC-1.example",
+            "ad-trackerC-2.example"
+          ]
+        }
+      }
+    ],
+    "Analytics": [
+      {
+        "Analytics Tracker A": {
+          "http://analytics-trackerA.example/": [
+            "analytics-trackerA-1.example",
+            "analytics-trackerA-2.example"
+          ],
+          "dnt": "w3c"
+        }
+      },
+      {
+        "Analytics Tracker B": {
+          "http://analytics-trackerB.example/": [
+            "analytics-trackerB.example"
+          ],
+          "session-replay": "true"
+        }
+      }
+    ],
+    "Social": [
+      {
+        "Social Tracker A": {
+          "http://social-trackerA.example/": [
+            "social-trackerA.example"
+          ]
+        }
+      }
+    ],
+    "Disconnect": [
+      {
+        "Varied Tracker": {
+          "http://tracker.example/": [
+            "a.should-be-ad-tracker.example",
+            "b.should-be-ad-tracker.example",
+            "should-be-analytics-tracker.example",
+            "should-be-social-tracker.example"
+          ],
+          "performance": "true"
+        }
+      },
+      {
+        "Also Should be Analytics Tracker": {
+          "http://also-should-be-analytics-tracker.example/": [
+            "also-should-be-analytics-tracker.example"
+          ]
+        }
+      },
+      {
+        "Small Tracker": {
+          "http://small-tracker.example/": [
+            "should-be-ad-tracker-small.example",
+            "should-be-social-tracker-small.example"
+          ],
+          "dnt": "w3c"
+        }
+      }
+    ],
+    "Content": [
+      {
+        "Content Tracker A": {
+          "http://content-trackerA.example/": [
+            "content-trackerA.example"
+          ]
+        }
+      },
+      {
+        "Content Tracker B": {
+          "http://content-trackerB.example/": [
+            "content-trackerB.example"
+          ]
+        }
+      }
+    ],
+    "Fingerprinting": [
+      {
+        "Fingerprinter A": {
+          "http://fingerprinter.example/": [
+            "fingerprinter.example"
+          ]
+        }
+      },
+      {
+        "Advertisement Tracker A": {
+          "http://ad-trackerA.example/": [
+            "ad-trackerA.example",
+            "ad-trackerA-fingerprinting.example"
+          ]
+        }
+      },
+      {
+        "Example": {
+          "http://example.com/": [
+            "example.com"
+          ]
+        }
+      }
+    ],
+    "Cryptomining": [
+      {
+        "Example": {
+          "http://example.com/": [
+            "example.com"
+          ]
+        }
+      }
+    ]
+  }
+}

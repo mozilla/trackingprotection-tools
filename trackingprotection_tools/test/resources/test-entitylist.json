@@ -1,0 +1,14 @@
+{
+    "Example": {
+        "properties": [
+            "example.com",
+            "example.net",
+            "example.org"
+        ],
+        "resources": [
+            "example.com",
+            "example.net",
+            "example.org"
+        ]
+    }
+}

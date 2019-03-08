@@ -1,0 +1,10 @@
+{
+  "a.should-be-ad-tracker.example": "Advertising",
+  "b.should-be-ad-tracker.example": "Advertising",
+  "should-be-analytics-tracker.example": "Analytics",
+  "should-be-social-tracker.example": "Social",
+  "also-should-be-analytics-tracker.example": "Analytics",
+  "should-be-ad-tracker-small.example": "Advertising",
+  "should-be-social-tracker-small.example": "Social"
+}
+

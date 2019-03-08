@@ -1,0 +1,17 @@
+sudo: required
+language: python
+os: linux
+dist: trusty
+python:
+ - "2.7"
+ - "3.5"
+ - "3.6"
+git:
+  depth: 3
+install:
+  - pip install -r requirements.txt
+before_script:
+  - flake8
+script:
+  - cd trackinprotection_tools/test
+  - py.test -s -v
