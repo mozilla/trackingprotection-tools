@@ -1,4 +1,4 @@
-# Mozilla Tracking Protection Tools [![Build Status](https://travis-ci.org/mozilla/trackingprotection_tools.svg?branch=master)](https://travis-ci.org/mozilla/trackingprotection_tools)
+# Mozilla Tracking Protection Tools [![Build Status](https://travis-ci.org/mozilla/trackingprotection-tools.svg?branch=master)](https://travis-ci.org/mozilla/trackingprotection-tools)
 
 A collection of tools for working with and analyzing Firefox's Tracking
 Protection.
