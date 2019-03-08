@@ -15,11 +15,12 @@ setup(
     name='trackingprotection-tools',
     license='MPL 2.0',
     url='https://github.com/mozilla/trackingprotection-tools',
-    version='0.3.0',
+    version='0.3.1',
     packages=['trackingprotection_tools'],
 
     # Dependencies
     install_requires=requirements,
+    setup_requires=['setuptools_scm'],
 
     # Packaging
     include_package_data=True,
@@ -36,6 +37,8 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Scientific/Engineering :: Information Analysis'
     ],
