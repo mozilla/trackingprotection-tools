@@ -108,8 +108,6 @@ class DisconnectParser(object):
         if self._should_remap:
             remapping = self._remap_disconnect(blocklist)
         for cat in blocklist['categories'].keys():
-            if self._should_remap and cat == 'Disconnect':
-                continue
             count = 0
             collapsed[cat] = set()
             if self._should_remap and cat in remapping:
@@ -134,7 +132,8 @@ class DisconnectParser(object):
                                 tags.add(k)
                             continue
                         elif k == DNT_TAG:
-                            continue  # ignore DNT for now
+                            tags.add(v)
+                            continue
                         raise ValueError(
                             "Unsupported record type %s in organization %s. "
                             "This likely means the list changed and the "
@@ -150,11 +149,13 @@ class DisconnectParser(object):
                                     "This likely means the parser needs to be "
                                     "updated due to a list format change." %
                                     (domains, org))
-                            collapsed[cat].add(domain)
                             for tag in tags:
                                 if tag not in tagged_domains:
                                     tagged_domains[tag] = set()
                                 tagged_domains[tag].add(domain)
+                            if self._should_remap and cat == 'Disconnect':
+                                continue
+                            collapsed[cat].add(domain)
                             count += 1
 
         return collapsed, tagged_domains
@@ -309,18 +310,41 @@ class DisconnectParser(object):
         """Returns all domains that match or are subdomains of hostname"""
         return [x for x in self._blocklist if x.endswith(hostname)]
 
-    def get_fingerprinting_hostnames(self):
-        """Returns a set of hostnames that have the fingerprinting tag"""
-        return self._tagged_domains.get(FINGERPRINTING_TAG, set())
+    def get_domains_with_category(self, categories):
+        """Returns all domains with the top-level categories
 
-    def get_cryptomining_hostnames(self):
-        """Returns a set of hostnames that have the cryptominer tag"""
-        return self._tagged_domains.get(CRYPTOMINING_TAG, set())
+        Parameters
+        ----------
+        categories : string or list of strings
+            One or more top-level categories to pull from the list
 
-    def get_session_replay_hostnames(self):
-        """Returns a set of hostnames that have the session replay tag"""
-        return self._tagged_domains.get(SESSION_REPLAY_TAG, set())
+        Returns
+        -------
+        set : All domains / rules under `categories`.
+        """
+        if not type(categories) == list:
+            categories = [categories]
+        out = set()
+        for category in categories:
+            out.update(self._categorized_blocklist[category])
+        return out
 
-    def get_performance_hostnames(self):
-        """Returns a set of hostnames that have the performance tag"""
-        return self._tagged_domains.get(PERFORMANCE_TAG, set())
+    def get_domains_with_tag(self, tags):
+        """Returns all domains with the top-level categories
+
+        Parameters
+        ----------
+        tags : string or list of strings
+            One or more top-level sub-category tags to pull from the list.
+            To specify `dnt` tags, use the type: `eff` or `w3c`.
+
+        Returns
+        -------
+        set : All domains / rules under `categories`.
+        """
+        if not type(tags) == list:
+            tags = [tags]
+        out = set()
+        for tag in tags:
+            out.update(self._tagged_domains[tag])
+        return out
