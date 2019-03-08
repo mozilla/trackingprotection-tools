@@ -7,6 +7,7 @@ import pytest
 
 from ..DisconnectParser import DisconnectParser
 from .basetest import BaseTest
+from .utilities import BASE_TEST_URL
 
 AD = {
     u"ad-trackerA-1.example",
@@ -78,6 +79,14 @@ DNT_EFF = {
     u"ad-trackerA-2.example",
     u"ad-trackerA-3.example"
 }
+ALL_CATEGORIES = [
+    'Advertising', 'Analytics', 'Fingerprinting', 'Cryptomining',
+    'Social', 'Content'
+]
+ALL_TEST_DOMAINS = AD.union(REMAPPED_AD).union(
+    ANALYTICS).union(REMAPPED_ANALYTICS).union(
+    SOCIAL).union(REMAPPED_SOCIAL).union(
+    CONTENT).union(CRYPTOMINING).union(FINGERPRINTING)
 
 
 class TestDisconnectParser(BaseTest):
@@ -100,9 +109,36 @@ class TestDisconnectParser(BaseTest):
             disconnect_mapping=self.mapping_file
         )
         self.parser_no_remap = DisconnectParser(
-            self.blocklist_file,
-            self.entitylist_file
+            self.blocklist_file
         )
+
+    def test_list_parsing(self):
+        remote = DisconnectParser(
+            blocklist_url=BASE_TEST_URL + '/test-blocklist.json',
+            entitylist_url=BASE_TEST_URL + '/test-entitylist.json',
+            disconnect_mapping_url=BASE_TEST_URL + '/test-mapping.json'
+        )
+        assert remote._blocklist == self.parser._blocklist
+        assert len(remote._entitylist) > 0
+        for url, resources in remote._entitylist.items():
+            assert resources == self.parser._entitylist[url]
+        assert (remote.get_domains_with_category(ALL_CATEGORIES)
+                == self.parser.get_domains_with_category(ALL_CATEGORIES))
+        assert (set(remote._disconnect_mapping.items())
+                == set(self.parser._disconnect_mapping.items()))
+
+        with pytest.raises(ValueError):
+            DisconnectParser(
+                blocklist=join(self.RESOURCE_DIR, 'test-blocklist.json'),
+                blocklist_url=BASE_TEST_URL+'/test-blocklist.json'
+            )
+        with pytest.raises(ValueError):
+            DisconnectParser()
+
+        with pytest.raises(RuntimeError):
+            DisconnectParser(
+                blocklist_url=BASE_TEST_URL+'/test-blocklist-doesnt-exist.json'
+            )
 
     def test_category_retrieval(self):
         assert self.parser.get_domains_with_category(
@@ -146,14 +182,6 @@ class TestDisconnectParser(BaseTest):
             == FINGERPRINTING.union(CRYPTOMINING)
         )
 
-        ALL_CATEGORIES = [
-            'Advertising', 'Analytics', 'Fingerprinting', 'Cryptomining',
-            'Social', 'Content'
-        ]
-        ALL_TEST_DOMAINS = AD.union(REMAPPED_AD).union(
-            ANALYTICS).union(REMAPPED_ANALYTICS).union(
-            SOCIAL).union(REMAPPED_SOCIAL).union(
-            CONTENT).union(CRYPTOMINING).union(FINGERPRINTING)
         assert (self.parser.get_domains_with_category(ALL_CATEGORIES) ==
                 ALL_TEST_DOMAINS)
 
