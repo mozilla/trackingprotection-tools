@@ -1,11 +1,12 @@
 sudo: required
 language: python
 os: linux
-dist: trusty
+dist: xenial
 python:
  - "2.7"
  - "3.5"
  - "3.6"
+ - "3.7"
 git:
   depth: 3
 install:

@@ -1,6 +1,8 @@
 import json
 import os
 
+import requests
+
 from openwpm_utils import domain as du
 from six.moves.urllib.parse import urlparse
 
@@ -20,47 +22,83 @@ class DisconnectParser(object):
     This partser is meant to use the list as it is used in Firefox's URL
     classifier. This does not necessarily match the implementation of
     Disconnect's own extension or any other consumer of the Disconnect list"""
-    def __init__(self, blocklist, entitylist, categories_to_exclude=[],
-                 disconnect_mapping=None, verbose=False):
+    def __init__(self, blocklist=None, entitylist=None,
+                 blocklist_url=None, entitylist_url=None,
+                 disconnect_mapping=None, disconnect_mapping_url=None,
+                 categories_to_exclude=[], verbose=False):
         """Initialize the parser.
 
         Parameters
         ----------
         blocklist : string
-            The file location of the blocklist. The canonical blocklist from
-            Disconnect repo is likely most up to date. See:
-            https://github.com/disconnectme/disconnect-tracking-protection/
-        whitelist : string
-            The file location of the entitylist. This is a Firefox-specific
-            list. See: https://github.com/mozilla-services/shavar-prod-lists/
-        categories_to_exclude : list
+            The file location of the blocklist. Either this or `blocklist_url`
+            must be specified.
+        entitylist : string (optional)
+            The file location of the entitylist.
+        blocklist_url : string
+            A URL where the blocklist can be fetched. Either this or
+            `blocklist` must be specified.
+        entitylist_url : string (optional)
+            A URL where the entitylist can be fetched. This cannot be
+            used alongside `entitylist`.
+        disconnect_mapping : string (optional)
+            A file location of the disconnect category remapping file in json
+            format.
+        disconnect_mapping_url : string (optional)
+            A URL where the disconnect category remapping file can be found.
+            This cannot be used alongside `disconnect_mapping`.
+        categories_to_exclude : list (optional)
             A list of list categories to exclude. Firefox currently excludes
             the `Content` category by default. (default empty list)
-        disconnect_mapping : string
-            A file location of the disconnect category remapping file in json
-            format. The canonical source of remapping info is:
-            https://github.com/mozilla-services/shavar-list-creation/blob/master/disconnect_mapping.py
         verbose : boolean
             Set to True to print list parsing info.
         """
         self.verbose = verbose
         self._exclude = set([x.lower() for x in categories_to_exclude])
-        self._should_remap = disconnect_mapping is not None
-        if self._should_remap:
-            with open(os.path.expanduser(disconnect_mapping), 'r') as f:
-                self.disconnect_mapping = json.load(f)
-        self._raw_blocklist = self._load_list(blocklist)
+
+        # Remapping
+        self._disconnect_mapping = self._load_list(
+            disconnect_mapping, disconnect_mapping_url)
+        self._should_remap = self._disconnect_mapping is not None
+
+        # Blocklist
+        self._raw_blocklist = self._load_list(blocklist, blocklist_url)
+        if self._raw_blocklist is None:
+            raise ValueError(
+                "Unable to load blocklist. Did you specify a valid list "
+                "location in `blocklist` or `blocklist_url`?"
+            )
         rv = self._parse_blocklist(self._raw_blocklist)
         self._categorized_blocklist, self._tagged_domains = rv
         self._blocklist = self._flatten_blocklist(self._categorized_blocklist)
-        self._raw_entitylist = self._load_list(entitylist)
-        self._entitylist = self._parse_entitylist(self._raw_entitylist)
 
-    def _load_list(self, location):
-        """Load the list from disk and return a json object"""
-        with open(location, 'r') as f:
-            json_list = json.load(f)
-        return json_list
+        # Entitylist
+        self._raw_entitylist = self._load_list(entitylist, entitylist_url)
+        if self._raw_entitylist is not None:
+            self._entitylist = self._parse_entitylist(self._raw_entitylist)
+
+    def _load_list(self, location, network_location):
+        """Load the list from the disk or network and return a json object"""
+        if location is not None and network_location is not None:
+            raise ValueError(
+                "Invalid combination of arguments. "
+                "You must not specify both a local and network location of "
+                "the same list. Choose one of the following: %s and %s." %
+                (location, network_location)
+            )
+        if location is not None:
+            with open(os.path.expanduser(location), 'r') as f:
+                json_list = json.load(f)
+            return json_list
+        if network_location is not None:
+            resp = requests.get(network_location)
+            if resp.status_code != 200:
+                raise RuntimeError(
+                    "Bad status code while requesting %s (code: %s)." %
+                    (network_location, resp.status_code)
+                )
+            return json.loads(resp.content.decode('utf-8'))
+        return
 
     def _remap_disconnect(self, blocklist):
         """Remap the "Disconnect" category
@@ -78,7 +116,7 @@ class DisconnectParser(object):
             'Analytics': set(),
             'Advertising': set()
         }
-        for domain, category in self.disconnect_mapping.items():
+        for domain, category in self._disconnect_mapping.items():
             if len(domain) == 1:
                 raise ValueError(
                     "Unexpected domain of length 1 in category %s "
