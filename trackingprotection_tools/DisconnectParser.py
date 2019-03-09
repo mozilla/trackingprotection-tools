@@ -97,7 +97,7 @@ class DisconnectParser(object):
                     "Bad status code while requesting %s (code: %s)." %
                     (network_location, resp.status_code)
                 )
-            return json.loads(resp.content)
+            return json.loads(resp.content.decode('utf-8'))
         return
 
     def _remap_disconnect(self, blocklist):
