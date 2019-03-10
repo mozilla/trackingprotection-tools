@@ -1,0 +1,43 @@
+{
+  "license": "No license.",
+  "categories": {
+    "Advertising": [
+      {
+        "Advertising Tracker A": {
+          "http://ad-trackerA.example/": [
+            "ad-trackerA-1.example"
+          ]
+        }
+      }
+    ],
+    "Analytics": [
+      {
+        "Analytics Tracker A": {
+          "http://analytics-trackerA.example/": [
+            "analytics-trackerA-1.example"
+          ]
+        }
+      }
+    ],
+    "Social": [
+      {
+        "Social Tracker A": {
+          "http://social-trackerA.example/": [
+            "social-trackerA.example"
+          ]
+        }
+      }
+    ],
+    "Disconnect": [
+      {
+        "Varied Tracker": {
+          "http://tracker.example/": [
+            "a.should-be-ad-tracker.example",
+            "b.should-be-ad-tracker.example",
+            "should-be-analytics-tracker.example"
+          ]
+        }
+      }
+    ]
+  }
+}

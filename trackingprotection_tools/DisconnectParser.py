@@ -1,5 +1,6 @@
 import json
 import os
+from collections import Counter
 
 import requests
 
@@ -102,30 +103,44 @@ class DisconnectParser(object):
             return json.loads(resp.content.decode('utf-8'))
         return
 
-    def _remap_disconnect(self, blocklist):
+    def _remap_disconnect(self, domain):
         """Remap the "Disconnect" category
 
         This contains a bunch of hardcoded logic for remapping the Disconnect
         category as specified here:
             https://github.com/mozilla-services/shavar-prod-lists#blacklist
 
+        Parameters
+        ----------
+        domain : string
+            Domain to remap using the remapping file.
+
         Returns
         -------
-        dict : Maps categories to sets of domains.
+        string : Category from the remapping file.
+
+        Raises
+        ------
+        ValueError
+            If `domain` not found in remapping or `domain` is remapped to a
+            non-existent category.
         """
-        remapped = {
-            'Social': set(),
-            'Analytics': set(),
-            'Advertising': set()
-        }
-        for domain, category in self._disconnect_mapping.items():
-            if len(domain) == 1:
-                raise ValueError(
-                    "Unexpected domain of length 1 in category %s "
-                    "This likely means the list parser needs to be updated." %
-                    (category))
-            remapped[category].add(domain)
-        return remapped
+        try:
+            category = self._disconnect_mapping[domain]
+        except KeyError:
+            raise ValueError(
+                "Blocklist contains block rule %s under the "
+                "Disconnect category, but the rule is not "
+                "found in the given Disconnect mapping file."
+                % domain
+            )
+        if category not in self._all_list_categories:
+            raise ValueError(
+                "Remapping file attempts to remap to an "
+                "unexpected category: %s. Supported categories: %s"
+                % (category, self._all_list_categories)
+            )
+        return category
 
     def _is_domain_key(self, key):
         """Return `True` if the key appears to be a domain key
@@ -142,20 +157,18 @@ class DisconnectParser(object):
         """Parse raw blocklist into a format that's easier to work with"""
         if self.verbose:
             print("Parsing raw list into categorized list...")
-        count = 0
+
         collapsed = dict()
-        tagged_domains = dict()
+        self._all_list_categories = set(blocklist['categories'].keys())
         if self._should_remap:
-            remapping = self._remap_disconnect(blocklist)
+            self._all_list_categories = self._all_list_categories.difference(
+                {'Disconnect'})
+        for category in self._all_list_categories:
+            collapsed[category] = set()
+
+        tagged_domains = dict()
+        remapping_count = Counter()
         for cat in blocklist['categories'].keys():
-            count = 0
-            collapsed[cat] = set()
-            if self._should_remap and cat in remapping:
-                collapsed[cat] = collapsed[cat].union(remapping[cat])
-                if self.verbose:
-                    print("Remapping %d domains from Disconnect to %s" % (
-                        len(remapping[cat]), cat))
-                count += len(remapping[cat])
             for item in blocklist['categories'][cat]:
                 for org, urls in item.items():
                     # Parse out sub-category. The way the list is structured,
@@ -194,9 +207,15 @@ class DisconnectParser(object):
                                     tagged_domains[tag] = set()
                                 tagged_domains[tag].add(domain)
                             if self._should_remap and cat == 'Disconnect':
+                                new_cat = self._remap_disconnect(domain)
+                                collapsed[new_cat].add(domain)
+                                remapping_count[new_cat] += 1
                                 continue
                             collapsed[cat].add(domain)
-                            count += 1
+        if self.verbose:
+            for category, count in remapping_count.items():
+                print("Remapped %d domains from Disconnect to %s" % (
+                    count, category))
 
         return collapsed, tagged_domains
 

@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import json
 from os.path import join
 
 import pytest
@@ -93,15 +92,19 @@ class TestDisconnectParser(BaseTest):
 
     @pytest.fixture(autouse=True)
     def create_parsers(self):
+        # Available blocklists
         self.blocklist_file = join(self.RESOURCE_DIR, 'test-blocklist.json')
-        with open(self.blocklist_file, 'r') as f:
-            self.blocklist = json.load(f)
+        self.short_blocklist_file = join(
+            self.RESOURCE_DIR, 'short-blocklist.json')
+        self.unmapped_blocklist_file = join(
+            self.RESOURCE_DIR, 'unmapped-blocklist.json')
+
+        # Available entitylists
         self.entitylist_file = join(self.RESOURCE_DIR, 'test-entitylist.json')
-        with open(self.entitylist_file, 'r') as f:
-            self.entitylist = json.load(f)
+
+        # Available mappings
         self.mapping_file = join(self.RESOURCE_DIR, 'test-mapping.json')
-        with open(self.mapping_file, 'r') as f:
-            self.mapping = json.load(f)
+        self.bad_mapping_file = join(self.RESOURCE_DIR, 'bad-mapping.json')
 
         self.parser = DisconnectParser(
             self.blocklist_file,
@@ -267,3 +270,41 @@ class TestDisconnectParser(BaseTest):
 
         # Ensure we don't throw an error with an unknown tag
         assert len(self.parser.get_domains_with_tag('bogus')) == 0
+
+    def test_remapping(self):
+        parser = DisconnectParser(
+            blocklist=self.short_blocklist_file,
+            disconnect_mapping=self.mapping_file
+        )
+        assert (
+            parser.get_domains_with_category('Advertising') == {
+                "ad-trackerA-1.example",
+                "a.should-be-ad-tracker.example",
+                "b.should-be-ad-tracker.example"
+            }
+        )
+        assert (
+            parser.get_domains_with_category('Analytics') == {
+                "analytics-trackerA-1.example",
+                "should-be-analytics-tracker.example"
+            }
+        )
+        assert (
+            parser.get_domains_with_category('Social') == {
+                "social-trackerA.example"
+            }
+        )
+
+        # Ensure we throw value error on unmapped domain
+        with pytest.raises(ValueError):
+            DisconnectParser(
+                blocklist=self.unmapped_blocklist_file,
+                disconnect_mapping=self.mapping_file
+            )
+
+        # Ensure we throw value error on bad remapping
+        with pytest.raises(ValueError):
+            DisconnectParser(
+                blocklist=self.short_blocklist_file,
+                disconnect_mapping=self.bad_mapping_file
+            )
