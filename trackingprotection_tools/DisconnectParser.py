@@ -15,6 +15,7 @@ PERFORMANCE_TAG = 'performance'
 DISCONNECT_TAGS = {
     FINGERPRINTING_TAG, CRYPTOMINING_TAG, SESSION_REPLAY_TAG, PERFORMANCE_TAG
 }
+ALL_TAGS = DISCONNECT_TAGS.union({DNT_TAG})
 
 
 class DisconnectParser(object):
@@ -135,7 +136,7 @@ class DisconnectParser(object):
         heuristic of whether the key starts with http or ends in a slash to
         mark resource lists.
         """
-        return key.startswith('http') or key.endswith('/')
+        return key not in ALL_TAGS
 
     def _parse_blocklist(self, blocklist):
         """Parse raw blocklist into a format that's easier to work with"""
