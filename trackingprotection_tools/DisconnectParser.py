@@ -359,6 +359,11 @@ class DisconnectParser(object):
         Returns
         -------
         set : All domains / rules under `categories`.
+
+        Raises
+        ------
+        KeyError
+            If a requested category isn't found in the blocklist.
         """
         if not type(categories) == list:
             categories = [categories]
@@ -374,7 +379,8 @@ class DisconnectParser(object):
         ----------
         tags : string or list of strings
             One or more top-level sub-category tags to pull from the list.
-            To specify `dnt` tags, use the type: `eff` or `w3c`.
+            To specify `dnt` tags, use the type: `eff` or `w3c`. This will not
+            throw an exception if a key is not found.
 
         Returns
         -------
@@ -384,5 +390,5 @@ class DisconnectParser(object):
             tags = [tags]
         out = set()
         for tag in tags:
-            out.update(self._tagged_domains[tag])
+            out.update(self._tagged_domains.get(tag, {}))
         return out

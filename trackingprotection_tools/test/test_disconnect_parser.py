@@ -243,6 +243,5 @@ class TestDisconnectParser(BaseTest):
             ) == SESSION_REPLAY.union(DNT_W3C)
         )
 
-        # bogus tag
-        with pytest.raises(KeyError):
-            self.parser.get_domains_with_tag('bogus')
+        # Ensure we don't throw an error with an unknown tag
+        assert len(self.parser.get_domains_with_tag('bogus')) == 0
