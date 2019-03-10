@@ -146,6 +146,8 @@ class TestDisconnectParser(BaseTest):
         assert self.parser_no_remap.get_domains_with_category(
             'Advertising') == AD
         assert self.parser.get_domains_with_category(
+            u'Advertising') == AD.union(REMAPPED_AD)
+        assert self.parser.get_domains_with_category(
             'Analytics') == ANALYTICS.union(REMAPPED_ANALYTICS)
         assert self.parser_no_remap.get_domains_with_category(
             'Analytics') == ANALYTICS
@@ -181,6 +183,16 @@ class TestDisconnectParser(BaseTest):
                 ['Fingerprinting', 'Cryptomining'])
             == FINGERPRINTING.union(CRYPTOMINING)
         )
+        assert (
+            self.parser.get_domains_with_category(
+                ('Fingerprinting', 'Cryptomining'))
+            == FINGERPRINTING.union(CRYPTOMINING)
+        )
+        assert (
+            self.parser.get_domains_with_category(
+                {'Fingerprinting', 'Cryptomining'})
+            == FINGERPRINTING.union(CRYPTOMINING)
+        )
 
         assert (self.parser.get_domains_with_category(ALL_CATEGORIES) ==
                 ALL_TEST_DOMAINS)
@@ -196,6 +208,8 @@ class TestDisconnectParser(BaseTest):
         assert self.parser_no_remap.get_domains_with_tag(
             'session-replay') == SESSION_REPLAY
         assert self.parser.get_domains_with_tag(
+            u'session-replay') == SESSION_REPLAY
+        assert self.parser.get_domains_with_tag(
             'performance') == PERFORMANCE
         assert self.parser_no_remap.get_domains_with_tag(
             'performance') == PERFORMANCE
@@ -207,6 +221,14 @@ class TestDisconnectParser(BaseTest):
             ['session-replay']) == SESSION_REPLAY
         assert (
             self.parser.get_domains_with_tag(['session-replay', 'performance'])
+            == SESSION_REPLAY.union(PERFORMANCE)
+        )
+        assert (
+            self.parser.get_domains_with_tag(('session-replay', 'performance'))
+            == SESSION_REPLAY.union(PERFORMANCE)
+        )
+        assert (
+            self.parser.get_domains_with_tag({'session-replay', 'performance'})
             == SESSION_REPLAY.union(PERFORMANCE)
         )
         assert (

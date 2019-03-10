@@ -3,6 +3,7 @@ import os
 
 import requests
 
+import six
 from openwpm_utils import domain as du
 from six.moves.urllib.parse import urlparse
 
@@ -365,7 +366,7 @@ class DisconnectParser(object):
         KeyError
             If a requested category isn't found in the blocklist.
         """
-        if not type(categories) == list:
+        if isinstance(categories, six.string_types):
             categories = [categories]
         out = set()
         for category in categories:
@@ -386,7 +387,7 @@ class DisconnectParser(object):
         -------
         set : All domains / rules under `categories`.
         """
-        if not type(tags) == list:
+        if isinstance(tags, six.string_types):
             tags = [tags]
         out = set()
         for tag in tags:
