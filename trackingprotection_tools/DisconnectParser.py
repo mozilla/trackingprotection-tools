@@ -365,13 +365,17 @@ class DisconnectParser(object):
         """Returns all domains that match or are subdomains of hostname"""
         return [x for x in self._blocklist if x.endswith(hostname)]
 
-    def get_domains_with_category(self, categories):
+    def get_domains_with_category(self, categories,
+                                  skip_disconnect_if_remapped=True):
         """Returns all domains with the top-level categories
 
         Parameters
         ----------
         categories : string or list of strings
             One or more top-level categories to pull from the list
+        skip_disconnect_if_remapped : boolean, optional
+            Skip retrieval of Disconnect domains if the category is already
+            remapped. (default True)
 
         Returns
         -------
@@ -386,6 +390,8 @@ class DisconnectParser(object):
             categories = [categories]
         out = set()
         for category in categories:
+            if self._should_remap and category == 'Disconnect':
+                continue
             out.update(self._categorized_blocklist[category])
         return out
 
