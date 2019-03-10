@@ -160,9 +160,6 @@ class DisconnectParser(object):
 
         collapsed = dict()
         self._all_list_categories = set(blocklist['categories'].keys())
-        if self._should_remap:
-            self._all_list_categories = self._all_list_categories.difference(
-                {'Disconnect'})
         for category in self._all_list_categories:
             collapsed[category] = set()
 
@@ -210,7 +207,6 @@ class DisconnectParser(object):
                                 new_cat = self._remap_disconnect(domain)
                                 collapsed[new_cat].add(domain)
                                 remapping_count[new_cat] += 1
-                                continue
                             collapsed[cat].add(domain)
         if self.verbose:
             for category, count in remapping_count.items():
