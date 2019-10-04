@@ -72,7 +72,9 @@ class DisconnectParser(object):
                 "location in `blocklist` or `blocklist_url`?"
             )
         rv = self._parse_blocklist(self._raw_blocklist)
-        self._categorized_blocklist, self._tagged_domains = rv
+        (self._categorized_blocklist,
+         self._tagged_domains,
+         self._company_classifier) = rv
         self._blocklist = self._flatten_blocklist(self._categorized_blocklist)
 
         # Entitylist
@@ -159,6 +161,7 @@ class DisconnectParser(object):
             print("Parsing raw list into categorized list...")
 
         collapsed = dict()
+        company_classifier = dict()
         self._all_list_categories = set(blocklist['categories'].keys())
         for category in self._all_list_categories:
             collapsed[category] = set()
@@ -208,12 +211,12 @@ class DisconnectParser(object):
                                 collapsed[new_cat].add(domain)
                                 remapping_count[new_cat] += 1
                             collapsed[cat].add(domain)
+                            company_classifier[domain] = org
         if self.verbose:
             for category, count in remapping_count.items():
                 print("Remapped %d domains from Disconnect to %s" % (
                     count, category))
-
-        return collapsed, tagged_domains
+        return collapsed, tagged_domains, company_classifier
 
     def _flatten_blocklist(self, blocklist):
         """Generate a flattened version of the blocklist category map"""
