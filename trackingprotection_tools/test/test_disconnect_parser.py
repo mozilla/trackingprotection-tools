@@ -321,7 +321,7 @@ class TestDisconnectParser(BaseTest):
                 ["Analytics", "Disconnect", "Advertising", "Social"]
             )
         )
-        assert(len(parser._blocklist + 1) == len(parser._company_classifier))
+        assert(len(parser._blocklist) == len(parser._company_classifier))
         assert(
             parser._company_classifier == {
                 "a.should-be-ad-tracker.example": "Varied Tracker",
