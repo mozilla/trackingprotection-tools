@@ -169,23 +169,24 @@ class DisconnectReport(object):
 
         Parameters
         ----------
-        domain : string or list of strings
-            Domain(s) for which to add comments.
-            Set domain to `*` to add comments for all domains in report.
+        domain : string
+            Domain for which to add comment.
         comment : string
             Comment to add for domain
         drop_duplicates : boolean (default True)
             Set to True to drop duplicate comments
         """
         if not isinstance(domain, six.string_types):
-            domain = [domain]
-        for item in domain:
-            report = self._get_report(item)
-            if 'comments' not in report:
-                report['comments'] = list()
-            if drop_duplicates and comment in report['comments']:
-                continue
-            report['comments'].append(comment)
+            raise ValueError(
+                "Argument `domain` must be unicode or a byte string. Got %s "
+                "instead." % type(domain)
+            )
+        report = self._get_report(domain)
+        if 'comments' not in report:
+            report['comments'] = list()
+        if drop_duplicates and comment in report['comments']:
+            return
+        report['comments'].append(comment)
 
 
 def send_report_to_disconnect(username, password, endpoint, reports):
