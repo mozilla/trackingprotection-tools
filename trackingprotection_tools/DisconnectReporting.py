@@ -132,7 +132,7 @@ class DisconnectReport(object):
         report['reason'] = reason
 
     def add_observation(self, domain, site_url, resource_url,
-                        content_hash=None, content=None):
+                        content_hash=None, content=None, metadata=None):
         """Add observations of `domain` to the report.
 
         Observations give context to where the domain was found.
@@ -149,18 +149,28 @@ class DisconnectReport(object):
             Hash of the content of the resource
         content : string (optional)
             Response body content for the instance of `resource_url`
+        metadata : dict (optional)
+            JSON-serializable dictionary to attach to the observation
         """
         report = self._get_report(domain)
         if 'observations' not in report:
             report['observations'] = list()
+        observation = dict()
+        observation['site_url'] = site_url
+        observation['resource_url'] = resource_url
         if content_hash is not None and content is not None:
             if domain not in self._content:
                 self._content[domain] = list()
             self._content[domain].append((content_hash, content))
-            report['observations'].append(
-                (site_url, resource_url, content_hash))
-        else:
-            report['observations'].append((site_url, resource_url))
+            observation['content_hash'] = content_hash
+        if metadata is not None:
+            if not isinstance(metadata, dict):
+                raise ValueError(
+                    "Argument `metadata` must be of type dict. Got %s "
+                    "instead." % type(metadata)
+                )
+            observation['metadata'] = metadata
+        report['observations'].append(observation)
 
     def add_comment(self, domain, comment, drop_duplicates=True):
         """Add freeform `comment` to report under `domain`
