@@ -4,9 +4,8 @@ from collections import Counter
 
 import requests
 
-import six
 from openwpm_utils import domain as du
-from six.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 DNT_TAG = 'dnt'
 FINGERPRINTING_TAG = 'fingerprinting'
@@ -386,7 +385,7 @@ class DisconnectParser(object):
         KeyError
             If a requested category isn't found in the blocklist.
         """
-        if isinstance(categories, six.string_types):
+        if isinstance(categories, str):
             categories = [categories]
         out = set()
         for category in categories:
@@ -409,7 +408,7 @@ class DisconnectParser(object):
         -------
         set : All domains / rules under `categories`.
         """
-        if isinstance(tags, six.string_types):
+        if isinstance(tags, str):
             tags = [tags]
         out = set()
         for tag in tags:
