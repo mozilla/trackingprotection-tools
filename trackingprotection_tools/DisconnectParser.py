@@ -1,11 +1,10 @@
 import json
 import os
 from collections import Counter
+from urllib.parse import urlparse
 
 import requests
-
 from openwpm_utils import domain as du
-from urllib.parse import urlparse
 
 DNT_TAG = 'dnt'
 FINGERPRINTING_TAG = 'fingerprinting'

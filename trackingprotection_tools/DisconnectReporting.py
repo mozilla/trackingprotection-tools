@@ -1,8 +1,8 @@
+import io
 import json
 import os
 import zipfile
 from datetime import datetime
-import io
 
 import requests
 
@@ -223,6 +223,7 @@ def send_report_to_disconnect(username, password, endpoint, reports):
     print("Sending POST request with reports to endpoint %s..." % endpoint)
     r = requests.post(endpoint, files=files, auth=(username, password))
     print("HTTP Response code: %s" % r)
+
 
 if __name__ == '__main__':
     import argparse
