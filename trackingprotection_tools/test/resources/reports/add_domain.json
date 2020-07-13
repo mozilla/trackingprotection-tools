@@ -1,0 +1,9 @@
+{
+    "domains": {
+        "http://example.com": {
+            "classification": "tracker",
+            "source": "Testing",
+            "reason": "It just seems suspicious"
+        }
+    }
+}

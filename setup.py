@@ -29,7 +29,6 @@ setup(
 
     # Classifiers
     classifiers=[
-        'Development Status :: 3',
         'Environment :: Web Environment :: Mozilla',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',

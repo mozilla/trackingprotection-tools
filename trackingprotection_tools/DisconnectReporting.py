@@ -43,18 +43,22 @@ class DisconnectReport(object):
         )
         print("Writing report to: %s" % os.path.join(root_dir, fname))
 
+        report_json = self._report_to_json(compressed)
+
+        with open(os.path.join(root_dir, fname), 'w') as f:
+            f.write(report_json)
+
+    def _report_to_json(self, compressed=False):
         output = dict()
         output['domains'] = self._domains
         if len(self._content) > 0:
             output['scripts'] = self._get_content()
-
         if compressed:
             raise NotImplementedError(
                 "Compression is not yet supported"
             )
         else:
-            with open(os.path.join(root_dir, fname), 'w') as f:
-                json.dump(output, f)
+            return json.dumps(output)
 
     def _get_content(self):
         """Get script content for output report"""
@@ -173,8 +177,7 @@ class DisconnectReport(object):
 
     def add_comment(self, domain, comment, drop_duplicates=True):
         """Add freeform `comment` to report under `domain`
-
-        New comments append to existing comments (with a line break added).
+        A new comment is appended to the list of `comments`
 
         Parameters
         ----------
