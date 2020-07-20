@@ -1,10 +1,10 @@
+import io
 import json
 import os
 import zipfile
 from datetime import datetime
 
 import requests
-import six
 
 CLASSIFICATIONS = {
     'tracker',   # to be used when futher categorization is unknown
@@ -24,7 +24,7 @@ class DisconnectReport(object):
         self._content = dict()  # maps domain to (content_hash, content)
         return
 
-    def generate_report(self, root_dir, compressed=False):
+    def generate_report(self, root_dir, name,  compressed=False):
         """Generate a final output report for Disconnect
 
         Parameters
@@ -39,22 +39,26 @@ class DisconnectReport(object):
             os.makedirs(root_dir)
         fname = datetime.strftime(
             datetime.utcnow(),
-            '%Y-%m-%d-domain_report.json'
+            name
         )
         print("Writing report to: %s" % os.path.join(root_dir, fname))
 
+        report_json = self._report_to_json(compressed)
+
+        with open(os.path.join(root_dir, fname), 'w') as f:
+            f.write(report_json)
+
+    def _report_to_json(self, compressed=False):
         output = dict()
         output['domains'] = self._domains
         if len(self._content) > 0:
             output['scripts'] = self._get_content()
-
         if compressed:
             raise NotImplementedError(
                 "Compression is not yet supported"
             )
         else:
-            with open(os.path.join(root_dir, fname), 'w') as f:
-                json.dump(output, f)
+            return json.dumps(output)
 
     def _get_content(self):
         """Get script content for output report"""
@@ -93,8 +97,7 @@ class DisconnectReport(object):
             domains = domains
         elif type(domains) != set:
             raise ValueError(
-                "Domain should be a string, list of strings, or a set of "
-                "strings"
+                "Domain should be a tuple, list or set of strings"
             )
 
         if len(domains.intersection(self._domains)) > 0:
@@ -132,7 +135,7 @@ class DisconnectReport(object):
         report['reason'] = reason
 
     def add_observation(self, domain, site_url, resource_url,
-                        content_hash=None, content=None):
+                        content_hash=None, content=None, metadata=None):
         """Add observations of `domain` to the report.
 
         Observations give context to where the domain was found.
@@ -149,48 +152,57 @@ class DisconnectReport(object):
             Hash of the content of the resource
         content : string (optional)
             Response body content for the instance of `resource_url`
+        metadata : dict (optional)
+            JSON-serializable dictionary to attach to the observation
         """
         report = self._get_report(domain)
         if 'observations' not in report:
             report['observations'] = list()
+        observation = dict()
+        observation['site_url'] = site_url
+        observation['resource_url'] = resource_url
         if content_hash is not None and content is not None:
             if domain not in self._content:
                 self._content[domain] = list()
             self._content[domain].append((content_hash, content))
-            report['observations'].append(
-                (site_url, resource_url, content_hash))
-        else:
-            report['observations'].append((site_url, resource_url))
+            observation['content_hash'] = content_hash
+        if metadata is not None:
+            if not isinstance(metadata, dict):
+                raise ValueError(
+                    "Argument `metadata` must be of type dict. Got %s "
+                    "instead." % type(metadata)
+                )
+            observation['metadata'] = metadata
+        report['observations'].append(observation)
 
     def add_comment(self, domain, comment, drop_duplicates=True):
         """Add freeform `comment` to report under `domain`
-
-        New comments append to existing comments (with a line break added).
+        A new comment is appended to the list of `comments`
 
         Parameters
         ----------
-        domain : string or list of strings
-            Domain(s) for which to add comments.
-            Set domain to `*` to add comments for all domains in report.
+        domain : string
+            Domain for which to add comment.
         comment : string
             Comment to add for domain
         drop_duplicates : boolean (default True)
             Set to True to drop duplicate comments
         """
-        if not isinstance(domain, six.string_types):
-            domain = [domain]
-        for item in domain:
-            report = self._get_report(item)
-            if 'comments' not in report:
-                report['comments'] = list()
-            if drop_duplicates and comment in report['comments']:
-                continue
-            report['comments'].append(comment)
+        if not isinstance(domain, str):
+            raise ValueError(
+                "Argument `domain` must be unicode string. Got %s "
+                "instead." % type(domain)
+            )
+        report = self._get_report(domain)
+        if 'comments' not in report:
+            report['comments'] = list()
+        if drop_duplicates and comment in report['comments']:
+            return
+        report['comments'].append(comment)
 
 
 def send_report_to_disconnect(username, password, endpoint, reports):
     """Submit reports created by `DisconnectReport` to Disconnect.
-
     Parameters
     ----------
     username : string
@@ -205,7 +217,7 @@ def send_report_to_disconnect(username, password, endpoint, reports):
     """
 
     # Prepare zip archive in memory
-    archive_buffer = six.BytesIO()
+    archive_buffer = io.BytesIO()
     archive = zipfile.ZipFile(archive_buffer, 'a')
     for report in reports:
         if not os.path.isfile(report):
@@ -233,7 +245,7 @@ if __name__ == '__main__':
     parser.add_argument(
         'reports',
         metavar='/path/to/report.json',
-        type=six.text_type,
+        type=str,
         nargs='+',
         help='full path to report files generated by DisconnectReport'
     )
