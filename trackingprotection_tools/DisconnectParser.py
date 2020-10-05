@@ -4,7 +4,7 @@ from collections import Counter
 from urllib.parse import urlparse
 
 import requests
-from openwpm_utils import domain as du
+from domain_utils import domain_utils as du
 
 DNT_TAG = 'dnt'
 FINGERPRINTING_TAG = 'fingerprinting'
