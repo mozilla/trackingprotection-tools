@@ -1,2 +1,2 @@
-domain_utils
+domain-utils
 requests
