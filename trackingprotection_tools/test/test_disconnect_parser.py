@@ -308,3 +308,27 @@ class TestDisconnectParser(BaseTest):
                 blocklist=self.short_blocklist_file,
                 disconnect_mapping=self.bad_mapping_file
             )
+
+    def test_parse_blocklist_creates_domain_to_company_mapping(self):
+        parser = DisconnectParser(
+            self.short_blocklist_file,
+            self.entitylist_file,
+            disconnect_mapping=self.mapping_file
+        )
+
+        assert(
+            parser._all_list_categories == set(
+                ["Analytics", "Disconnect", "Advertising", "Social"]
+            )
+        )
+        assert(len(parser._blocklist) == len(parser._company_classifier))
+        assert(
+            parser._company_classifier == {
+                "a.should-be-ad-tracker.example": "Varied Tracker",
+                "analytics-trackerA-1.example": "Analytics Tracker A",
+                "social-trackerA.example": "Social Tracker A",
+                "ad-trackerA-1.example": "Advertising Tracker A",
+                "b.should-be-ad-tracker.example": "Varied Tracker",
+                "should-be-analytics-tracker.example": "Varied Tracker"
+            }
+        )
